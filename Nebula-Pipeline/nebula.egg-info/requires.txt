@@ -1,11 +1,11 @@
-aiohttp
-elasticsearch
-nltk
-numpy
-python-socketio
 pyzmq
-scikit-learn
+numpy
 scipy
 sklearn
 tweepy
+nltk
 zerorpc
+elasticsearch
+python-socketio
+scikit-learn
+aiohttp

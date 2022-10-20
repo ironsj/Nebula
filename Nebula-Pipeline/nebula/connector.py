@@ -2,6 +2,7 @@
 the one currently used by the Nebula Node.js server."""
 
 import json
+import logging
 import queue
 # import zerorpc
 # import zmq
@@ -156,7 +157,8 @@ from . import pipeline
 #This is the new connector utilizing Socket.io.  Functions similarly to the zeroMQ connector
 class SocketIOConnector (pipeline.Connector):
 
-    sio = socketio.AsyncClient()
+    sio = socketio.AsyncClient(logger=True)
+    logging.basicConfig(filename="connector_log.log", filemode = 'w', level=logging.DEBUG)
 
     def __init__(self, port=5555):
         self._update = None
@@ -171,11 +173,11 @@ class SocketIOConnector (pipeline.Connector):
 
         host="://127.0.0.1:"
 
-        url = proto+ host + str(4040)
+        url = proto+ host + str(port)
         await SocketIOConnector.sio.connect(url)
         
-        #This was used to test the connector connection
-        await SocketIOConnector.sio.emit("testing")
+        SocketIOConnector.sio.on("msg", self.handle_message)
+        SocketIOConnector.sio.start_background_task(self.start)
         await SocketIOConnector.sio.wait()
     
     def set_callbacks(self, update=None, get=None, set=None, reset=None):
@@ -191,56 +193,58 @@ class SocketIOConnector (pipeline.Connector):
         if reset:
             self._reset = reset
             
-   
-    def start(self):
+    async def start(self):
+        logging.debug("STARTING")
         while True:
             # Check if we have any data to push
             try:
                 data = self._push_queue.get_nowait()
-                print("data",{"func": "update", "contents": data})
+                await self.sio.send(data)
             except queue.Empty:
                 pass
-            
-            
-            
+            await self.sio.sleep(0)
+                   
     def push_update(self, data):
         self._push_queue.put(data)
-            
-        
-    @sio.on("msg")
+        logging.debug(f'pushing data')
+    
     async def handle_message(self, data): 
-                # We have a new request
-
-                # Make sure the request has the right format
-                if "func" not in data:
-                    raise TypeError("Malformed socket request, missing func")
+        # We have a new request
+        logging.debug("handling data")
+        
+        # Make sure the request has the right format
+        if "func" not in data:
+            raise TypeError("Malformed socket request, missing func")
+        
+        func = data["func"]
+        
+        funcs = {"update": self._update,
+                    "get": self._get,
+                    "set": self._set,
+                    "reset": self._reset}
+        
+        # Make sure the function they are calling is defined
+        if func not in funcs:
+            raise TypeError("%s function not defined in connector" % func)
+        
+        func_call = funcs[func]
+        
+        # Make sure the callback is set
+        if not func_call:
+            raise TypeError("%s callback not set" % func)
+        
+        if func == "reset":
+            response = func_call()
+            
+        else:
+            if "contents" not in data:
+                raise TypeError("Malformed socket request, missing contents")
+            
+            contents = data["contents"]
+            response = func_call(contents)
+            
+        data["contents"] = response
+        self.push_update(data)
                 
-                func = data["func"]
-                
-                funcs = {"update": self._update,
-                            "get": self._get,
-                            "set": self._set,
-                            "reset": self._reset}
-                
-                # Make sure the function they are calling is defined
-                if func not in funcs:
-                    raise TypeError("%s function not defined in connector" % func)
-                
-                func_call = funcs[func]
-                
-                # Make sure the callback is set
-                if not func_call:
-                    raise TypeError("%s callback not set" % func)
-                
-                if func == "reset":
-                    response = func_call()
-                else:
-                    if "contents" not in data:
-                        raise TypeError("Malformed socket request, missing contents")
-                    
-                    contents = data["contents"]
-                    response = func_call(contents)
-                    
-                data["contents"] = response
-                print("sending data")
-                print(data)
+    
+    

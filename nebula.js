@@ -5,8 +5,8 @@ import zmq from "zeromq";
 import readline from "linebyline";
 import getPort from "get-port";
 import express from "express";
-import {Server} from "socket.io"; 
-import {createServer} from "http";
+import { Server } from "socket.io";
+import { createServer } from "http";
 
 
 /* Load the databases we need */
@@ -44,34 +44,34 @@ var pipelines = {
     andromeda: {
         file: "pipelines/andromeda.py",
         defaultData: "data/highD/Animal_Data_study.csv"
-     },
-     cosmos: {
+    },
+    cosmos: {
         file: "pipelines/cosmos.py",
         defaultData: textDataPath + "crescent tfidf.csv"
-     },
-     sirius: {
+    },
+    sirius: {
         file: "pipelines/sirius.py",
         defaultData: "data/highD/Animal_Data_paper.csv"
-     },
-     centaurus: {
+    },
+    centaurus: {
         file: "pipelines/centaurus.py",
         defaultData: "data/highD/Animal_Data_paper.csv"
-     },
-     twitter: {
+    },
+    twitter: {
         file: "pipelines/twitter.py",
-     },
-     composite: {
+    },
+    composite: {
         file: "pipelines/composite.py",
         defaultData: textDataPath + "crescent tfidf.csv"
-     },
-     elasticsearch: {
+    },
+    elasticsearch: {
         file: "pipelines/espipeline.py",
         args: []
-     },
-     omniview: {
+    },
+    omniview: {
         file: "pipelines/omniview.py",
         args: []
-     }
+    }
 };
 
 /* The locations of the different types of datasets on the server */
@@ -108,16 +108,16 @@ export default function Nebula(clientio, pipelineAddr) {
     var self = this;
 
     /* Accept new WebSocket clients */
-    clientio.on('connection', function(socket) {
+    clientio.on('connection', function (socket) {
         console.log("new connection finally!");
 
-		//This was used to test the connector connection    
-    	socket.on('testing', function(){
-    		console.log("Python connection established");
-    	});
+        //This was used to test the connector connection    
+        socket.on('testing', function () {
+            console.log("Python connection established!");
+        });
 
         /* When a client requests the list of rooms, send them the list */
-        socket.on('list.sessions',function() {
+        socket.on('list.sessions', function () {
             socket.emit('list.sessions.response', clientio.sockets.adapter.rooms);
         });
 
@@ -144,7 +144,7 @@ export default function Nebula(clientio, pipelineAddr) {
                     while (!sessionNumberFound && index >= 0) {
                         var number = Number(name.substring(index, name.length));
                         if (Number.isNaN(number)) {
-                            sessionNumber = Number(name.substring(index+1, name.length))
+                            sessionNumber = Number(name.substring(index + 1, name.length))
                             sessionNumberFound = true;
                         }
                         index--;
@@ -154,7 +154,7 @@ export default function Nebula(clientio, pipelineAddr) {
                     // usedSessionNumbers
                     var sessionNumIndex = usedSessionNumbers.indexOf(sessionNumber);
                     var usedSessionNums1 = usedSessionNumbers.slice(0, sessionNumIndex);
-                    var usedSessionNums2 = usedSessionNumbers.slice(sessionNumIndex+1, usedSessionNumbers.length);
+                    var usedSessionNums2 = usedSessionNumbers.slice(sessionNumIndex + 1, usedSessionNumbers.length);
                     usedSessionNumbers = usedSessionNums1.concat(usedSessionNums2);
 
                     // Kill the Python script associated with the empty room
@@ -185,7 +185,7 @@ export default function Nebula(clientio, pipelineAddr) {
         /* When the client starts trying to select a file, provide a list of
          * possible files to choose from
          */
-        socket.on('getDefaultFileList', function(isTextOnlyUI, ui) {
+        socket.on('getDefaultFileList', function (isTextOnlyUI, ui) {
             if (ui == "radar") {
                 ui = "cosmos";
             }
@@ -215,7 +215,7 @@ export default function Nebula(clientio, pipelineAddr) {
         /* Helper function to tell the client that the CSV file is now ready for them
         * to use. They are also sent a copy of the data
         */
-        var csvFileReady = function(csvFilePath) {
+        var csvFileReady = function (csvFilePath) {
 
             // Let the client know that the CSV file is now ready to be used on
             // the server
@@ -267,7 +267,7 @@ export default function Nebula(clientio, pipelineAddr) {
 
                 // On certain OSs, like Windows, an extra, blank line may be read
                 // Check for this and remove it if it exists
-                var lastObservation = csvData[csvData.length-1];
+                var lastObservation = csvData[csvData.length - 1];
                 var lastObservationKeys = Object.keys(lastObservation);
                 if (lastObservationKeys.length = 1 && lastObservation[lastObservationKeys[0]] == "") {
                     csvData.pop();
@@ -282,7 +282,7 @@ export default function Nebula(clientio, pipelineAddr) {
          * generate a new file using the room name that contains the given data.
          * Set the csvFilePath variable appropriately
          */
-        socket.on('setData', function(data, room) {
+        socket.on('setData', function (data, room) {
             // Create the csvFilePath
             csvFilePath = customCSVFolder + room + "_data.csv";
             // Set exec to be a function that calls the command line
@@ -312,7 +312,7 @@ export default function Nebula(clientio, pipelineAddr) {
                 }
             });
 
-            childProcess.on("close", function() {
+            childProcess.on("close", function () {
                 // Only emit the "csvDataReady" message to the client if no errors
                 // were encountered while attempting to create the custom CSV file
                 if (errors.length == 0) {
@@ -322,7 +322,7 @@ export default function Nebula(clientio, pipelineAddr) {
         });
 
         /* Allows the client to specify a CSV file already on the server to use */
-        socket.on("setCSV", function(csvName) {
+        socket.on("setCSV", function (csvName) {
             csvFilePath = "data/" + csvName;
             csvFileReady(csvFilePath);
         });
@@ -330,7 +330,7 @@ export default function Nebula(clientio, pipelineAddr) {
         /*
          * Allows the server to be in control of session names
          */
-        socket.on("getSessionName", function(ui) {
+        socket.on("getSessionName", function (ui) {
             // Create the new session name and send it back to the UI
             var sessionName = ui + nextSessionNumber;
             socket.emit("receiveSessionName", sessionName);
@@ -341,7 +341,7 @@ export default function Nebula(clientio, pipelineAddr) {
             // Determine the next session number. If we're getting too close to
             // the MAX_VALUE, start looking at old session numbers to see if an
             // old number can be used
-            if (nextSessionNumber == Number.MAX_VALUE || (nextSessionNumber+1) > Number.MAX_VALUE) {
+            if (nextSessionNumber == Number.MAX_VALUE || (nextSessionNumber + 1) > Number.MAX_VALUE) {
 
                 // Start back at 0 and check for session numbers that are no
                 // longer being used. 0 would be the oldest session number, and
@@ -352,7 +352,7 @@ export default function Nebula(clientio, pipelineAddr) {
                 // A NEW SESSION NUMBER
                 nextSessionNumber = 0;
                 while (usedSessionNumber.indexOf(nextSessionNumber) >= 0 &&
-                  nextSessionNumber < Number.MAX_VALUE) {
+                    nextSessionNumber < Number.MAX_VALUE) {
                     nextSessionNumber++;
                 }
             }
@@ -365,27 +365,27 @@ export default function Nebula(clientio, pipelineAddr) {
          * initiate it and send the new room to the client. Otherwise, send
          * the client the current state of the room.
          */
-        socket.on('leave', function() {
-    	    var roomname = socket.roomName;
+        socket.on('leave', function () {
+            var roomname = socket.roomName;
             socket.room.count -= 1;
             socket.leave(socket.roomName);
-            socket.emit('leave',roomname);
+            socket.emit('leave', roomname);
 
-     	    if(socket.room.count <= 0) {
-     	        var filePath = customCSVFolder + roomname + "_data.csv";
-     	        deleteFile(filePath);
-     	    }
+            if (socket.room.count <= 0) {
+                var filePath = customCSVFolder + roomname + "_data.csv";
+                deleteFile(filePath);
+            }
 
         });
 
         // function to delete a file
         function deleteFile(filePath) {
-     	    fs.stat(filePath, function(err, data) {
+            fs.stat(filePath, function (err, data) {
                 if (err) {
                     console.log(socket.roomName + ': File ' + filePath + ' does not exist');
                 }
                 else {
-                    fs.unlink(filePath, function(err) {
+                    fs.unlink(filePath, function (err) {
                         if (err) {
                             return console.error(socket.roomName + ": Error unlinking file: " + err);
                         }
@@ -394,11 +394,11 @@ export default function Nebula(clientio, pipelineAddr) {
             });
         }
 
-       /*  a client/ a room. If the room doesn't next exist yet,
-        * initiate it and send the new room to the client. Otherwise, send
-        * the client the current state of the room.
-        */
-        socket.on('join', function(roomName, user, pipeline, args) {
+        /*  a client/ a room. If the room doesn't next exist yet,
+         * initiate it and send the new room to the client. Otherwise, send
+         * the client the current state of the room.
+         */
+        socket.on('join', function (roomName, user, pipeline, args) {
             console.log(roomName + ": Join called for " + pipeline + " pipeline");
             socket.roomName = roomName;
             socket.user = user;
@@ -479,8 +479,8 @@ export default function Nebula(clientio, pipelineAddr) {
                         // used
                         if (pythonArgs.indexOf("--dist_func") < 0) {
                             if (pipeline === "twitter" || pipeline === "elasticsearch" ||
-                                    pipeline === "omniview" ||
-                                    csvFilePath.startsWith(textDataPath)) {
+                                pipeline === "omniview" ||
+                                csvFilePath.startsWith(textDataPath)) {
                                 pythonArgs.push("--dist_func", "cosine");
                             }
                             else {
@@ -492,16 +492,16 @@ export default function Nebula(clientio, pipelineAddr) {
                         console.log(pythonArgs);
                         console.log("");
 
-                        var pipelineInstance = spawn.spawn("python3", pythonArgs, {stdout: "inherit"});
+                        var pipelineInstance = spawn.spawn("python3", pythonArgs, { stdout: "inherit" });
 
-                        pipelineInstance.on("error", function(err) {
+                        pipelineInstance.on("error", function (err) {
                             console.log(socket.roomName + ": python3.exe not found. Trying python.exe");
-                            pipelineInstance = spawn.spawn("python3", pythonArgs,{stdout: "inherit"});
+                            pipelineInstance = spawn.spawn("python3", pythonArgs, { stdout: "inherit" });
 
-                            pipelineInstance.stdout.on("data", function(data) {
+                            pipelineInstance.stdout.on("data", function (data) {
                                 console.log(socket.roomName + " Pipeline: " + data.toString());
                             });
-                            pipelineInstance.stderr.on("data", function(data) {
+                            pipelineInstance.stderr.on("data", function (data) {
                                 console.log(socket.roomName + " Pipeline error: " + data.toString());
                             });
                         });
@@ -511,11 +511,11 @@ export default function Nebula(clientio, pipelineAddr) {
                          * we want to convert that received data into a string and
                          * append it to the overall data String
                          */
-                         //check data for one of the 4 commands, else log as below
-                        pipelineInstance.stdout.on("data", function(data) {
+                        //check data for one of the 4 commands, else log as below
+                        pipelineInstance.stdout.on("data", function (data) {
                             console.log(socket.roomName + " Pipeline STDOUT: " + data.toString());
                         });
-                        pipelineInstance.stderr.on("data", function(data) {
+                        pipelineInstance.stderr.on("data", function (data) {
                             console.log(socket.roomName + " Pipeline error: " + data.toString());
                         });
 
@@ -535,25 +535,31 @@ export default function Nebula(clientio, pipelineAddr) {
                     room.pipelineSocket = sock;
                     room.pipelineSocket.connect(pipelineAddr);
                     */
-                    
+
                     //Utilizing Socket.io to connect to connector
                     const httpServer = createServer();
                     this.pythonio = new Server(httpServer);
-                    
-					//Setting the new socket for the room
+                    this.pythonio.on("connection", (socket) => {
+                        console.log(socket.id)
+                    });
+                    httpServer.listen(port);
+
+                    //Setting the new socket for the room
                     room.pipelineSocket = this.pythonio;
-                    
-			
+
+
                     pipelineAddr = null;
                     portsInProcess.splice(portsInProcess.indexOf(port), 1);
 
-                    /* Listens for messages from the pipeline */
-                    room.pipelineSocket.on('message', function (msg) {
-                        self.handleMessage(room, msg);
-                    });
+                    room.pipelineSocket.on("connection", function (sock) {
+                        console.log("SEND ME A MESSAGE - Love, SERVER")
+                        sock.on('message', function (data) {
+                            self.handleMessage(room, JSON.stringify(data));
+                        });
+                        invoke(room.pipelineSocket, "reset");
+                    })
 
                     self.rooms[roomName] = socket.room = room;
-                    invoke(room.pipelineSocket, "reset");
                 }
                 else {
                     socket.room = self.rooms[roomName];
@@ -576,12 +582,12 @@ export default function Nebula(clientio, pipelineAddr) {
         /* Listens for actions from the clients, tracking them and then
          * broadcasting them to all other clients within the room.
          */
-        socket.on('action', function(data, isObservation) {
+        socket.on('action', function (data, isObservation) {
             if (socket.room) {
                 self.handleAction(data, socket.room);
 
                 //emit update actions to other rooms
-                if (typeof(isObservation) == "undefined") {
+                if (typeof (isObservation) == "undefined") {
                     socket.broadcast.to(socket.roomName).emit('action', data);
                 }
                 else {
@@ -593,18 +599,20 @@ export default function Nebula(clientio, pipelineAddr) {
         /* Listens for update requests from the client, executing the update
          * and then sending the results to all clients.
          */
-        socket.on('update', function(data, isObservation, prototype, obsFeedback, attrFeedback, obsForage, attrForage) {
+        socket.on('update', function (data, isObservation, prototype, obsFeedback, attrFeedback, obsForage, attrForage) {
             if (socket.room) {
                 if (data.type === "oli") {
-                    if (typeof(isObservation) == "undefined") {
+                    if (typeof (isObservation) == "undefined") {
                         invoke(socket.room.pipelineSocket, "update",
-                            {interaction: "oli", type: "classic", points: oli(socket.room)});
+                            { interaction: "oli", type: "classic", points: oli(socket.room) });
                     }
                     else {
                         invoke(socket.room.pipelineSocket, "update",
-                            {interaction: "oli", type: "classic", points: oli(socket.room, isObservation),
+                            {
+                                interaction: "oli", type: "classic", points: oli(socket.room, isObservation),
                                 docFeedback: obsFeedback, attrFeedback: attrFeedback, docForage: obsForage, attrForage: attrForage,
-                                view:isObservation, prototype: prototype});
+                                view: isObservation, prototype: prototype
+                            });
                     }
                 }
                 else {
@@ -623,15 +631,16 @@ export default function Nebula(clientio, pipelineAddr) {
         /* Listens for get requests to get information about the underlying data,
          * such as the original text of the document or the type.
          */
-        socket.on('get', function(data, isObservation) {
+        socket.on('get', function (data, isObservation) {
             if (socket.room) {
                 invoke(socket.room.pipelineSocket, "get", data);
             }
         });
 
         /* Resets the pipeline. */
-        socket.on('reset', function() {
+        socket.on('reset', function () {
             if (socket.room) {
+                console.log("reset was called!")
                 invoke(socket.room.pipelineSocket, "reset");
                 socket.room.points = new Map();
             }
@@ -642,12 +651,12 @@ export default function Nebula(clientio, pipelineAddr) {
 /* Handles an action received by the client, updating the state of the room
  * as necessary.
  */
-Nebula.prototype.handleAction = function(action, room) {
+Nebula.prototype.handleAction = function (action, room) {
     if (action.type === "move") {
         if (room.points.has(action.id)) {
             room.points.get(action.id).pos = action.pos;
         }
-        else if (typeof(room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
+        else if (typeof (room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
             room.attribute_points.get(action.id).pos = action.pos;
         }
         else {
@@ -658,13 +667,13 @@ Nebula.prototype.handleAction = function(action, room) {
         if (room.points.has(action.id)) {
             room.points.get(action.id).selected = action.state;
         }
-        else if (typeof(room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
+        else if (typeof (room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
             room.attribute_points.get(action.id).selected = action.state;
         }
         else {
             // Not sure what this condition should be...
             // Use to check typeof(console) != "undefined" which doesn't make sense
-            if (typeof(socket) != "undefined") {
+            if (typeof (socket) != "undefined") {
                 console.log(room.name + ": Point not found in room for select: " + action.id);
             }
             else {
@@ -678,7 +687,7 @@ Nebula.prototype.handleAction = function(action, room) {
         if (room.points.has(action.id)) {
             room.points.get(action.id).sample = action.state;
         }
-        else if (typeof(room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
+        else if (typeof (room.attribute_points) != "undefined" && room.attribute_points.has(action.id)) {
             room.attribute_points.get(action.id).sample = action.state;
         }
         else {
@@ -688,7 +697,8 @@ Nebula.prototype.handleAction = function(action, room) {
 };
 
 /* Handles a message from the pipeline, encapsulated in an RPC-like fashion */
-Nebula.prototype.handleMessage = function(room, msg) {
+Nebula.prototype.handleMessage = function (room, msg) {
+    console.log("SERVER GOT THE MESSAGE")
     var obj = JSON.parse(msg.toString());
 
     if (obj.func) {
@@ -705,8 +715,9 @@ Nebula.prototype.handleMessage = function(room, msg) {
         }
         else if (obj.func === "reset") {
             // takes place either when users joins the room or when he hits reset button
+            console.log("SERVER SHOULD RESET NOW!")
             this.clientio.to(room.name).emit("reset");
-            invoke(room.pipelineSocket, "update", {interaction: "none", prototype: sirius_prototype});
+            invoke(room.pipelineSocket, "update", { interaction: "none", prototype: sirius_prototype });
         }
     }
 };
@@ -717,13 +728,13 @@ Nebula.prototype.handleMessage = function(room, msg) {
  * It stores the data from pipeline to save in the room (points/similarity weights) by calling
  * updateRoom function
  */
-Nebula.prototype.handleUpdate = function(room, res) {
+Nebula.prototype.handleUpdate = function (room, res) {
     console.log(room.name + ": Handle update called");
 
     var update = {};
     update.points = [];
     if (res.documents) {
-        for (var i=0; i < res.documents.length; i++) {
+        for (var i = 0; i < res.documents.length; i++) {
             var doc = res.documents[i];
             var obj = {};
             obj.id = doc.doc_id;
@@ -737,16 +748,16 @@ Nebula.prototype.handleUpdate = function(room, res) {
                 obj.col = doc.color;
             }
 
-            if (typeof(room.observation_data) != "undefined") {
+            if (typeof (room.observation_data) != "undefined") {
                 var data = {};
-                data.type='raw'
+                data.type = 'raw'
                 data.id = doc.doc_id
                 data.value = doc.doc_attributes
                 room.observation_data.push(data)
 
                 obj.type = "observation";
                 if (res.ATTRIBUTE.similarity_weights) {
-                    for (var j=0; j< res.ATTRIBUTE.similarity_weights.length; j++) {
+                    for (var j = 0; j < res.ATTRIBUTE.similarity_weights.length; j++) {
                         weight = res.ATTRIBUTE.similarity_weights[j]
                         if (weight.id == obj.id) {
                             obj.relevance = weight.weight
@@ -763,13 +774,13 @@ Nebula.prototype.handleUpdate = function(room, res) {
     if (res.similarity_weights) {
         update.similarity_weights = res.similarity_weights;
     }
-    
+
     // This grabs the word cloud data, should there be any
     if (res.cloud) {
         update.cloud = res.cloud;
     }
 
-    if (typeof(room.observation_data) != "underfined") {
+    if (typeof (room.observation_data) != "underfined") {
         updateRoom(room, update, true);
         this.clientio.to(room.name).emit('update', update, true);
     }
@@ -778,17 +789,17 @@ Nebula.prototype.handleUpdate = function(room, res) {
         this.clientio.to(room.name).emit('update', update);
     }
 
-    if (typeof(room.observation_data) != "undefined") {
+    if (typeof (room.observation_data) != "undefined") {
         var update_attr = {};
         update_attr.points = [];
 
         if (res.ATTRIBUTE.attr_list) {
-            for (var i=0; i < res.ATTRIBUTE.attr_list.length; i++) {
+            for (var i = 0; i < res.ATTRIBUTE.attr_list.length; i++) {
                 var attr = res.ATTRIBUTE.attr_list[i];
                 var obj = {};
                 var data_attr = {}
 
-                data_attr.type ='raw'
+                data_attr.type = 'raw'
                 data_attr.id = attr.attr_id
 
                 data_attr.value = attr.attribute_docs
@@ -797,11 +808,11 @@ Nebula.prototype.handleUpdate = function(room, res) {
                 obj.pos = attr.low_d;
 
                 obj.type = "attribute";
-                if(res.similarity_weights) {
-                    for (var j=0; j< res.similarity_weights.length;j++) {
+                if (res.similarity_weights) {
+                    for (var j = 0; j < res.similarity_weights.length; j++) {
                         weight = res.similarity_weights[j]
-                        if(weight.id == obj.id) {
-                           obj.relevance=weight.weight
+                        if (weight.id == obj.id) {
+                            obj.relevance = weight.weight
                         }
                     }
                 }
@@ -815,24 +826,24 @@ Nebula.prototype.handleUpdate = function(room, res) {
             update_attr.similarity_weights = res.ATTRIBUTE.similarity_weights;
         }
 
-        if (typeof(room.observation_data) != "undefined") {
+        if (typeof (room.observation_data) != "undefined") {
             updateRoom(room, update_attr, false);
             this.clientio.to(room.name).emit('update', update_attr, false);
         }
-//        else {
-//            updateRoom(room, update_attr, false);
-//            this.clientio.to(room.name).emit('update', update_attr, false);
-//        }
+        //        else {
+        //            updateRoom(room, update_attr, false);
+        //            this.clientio.to(room.name).emit('update', update_attr, false);
+        //        }
 
     }
 };
 
 /* Updates our state for each room upon an update from the pipeline */
 /* modifies the values inside room array*/
-var updateRoom = function(room, update, view) {
-    if (typeof(view) == "undefined" || view) {
+var updateRoom = function (room, update, view) {
+    if (typeof (view) == "undefined" || view) {
         if (update.points) {
-            for (var i=0; i < update.points.length; i++) {
+            for (var i = 0; i < update.points.length; i++) {
                 var point = update.points[i];
 
                 if (room.points.has(point.id)) {
@@ -849,7 +860,7 @@ var updateRoom = function(room, update, view) {
             }
         }
         if (update.similarity_weights) {
-            for (var i=0; i < update.similarity_weights.length; i++) {
+            for (var i = 0; i < update.similarity_weights.length; i++) {
                 var weight = update.similarity_weights[i];
 
                 if (room.similarity_weights.has(weight.id)) {
@@ -863,7 +874,7 @@ var updateRoom = function(room, update, view) {
     }
     else if (!view) {
         if (update.points) {
-            for (var i=0; i < update.points.length; i++) {
+            for (var i = 0; i < update.points.length; i++) {
                 var point = update.points[i];
                 if (room.attribute_points.has(point.id)) {
                     if (point.pos)
@@ -878,7 +889,7 @@ var updateRoom = function(room, update, view) {
             }
         }
         if (update.similarity_weights) {
-            for (var i=0; i < update.similarity_weights.length; i++) {
+            for (var i = 0; i < update.similarity_weights.length; i++) {
                 var weight = update.similarity_weights[i];
                 if (room.attribute_similarity_weights.has(weight.id)) {
                     room.attribute_similarity_weights.get(weight.id).weight = weight.weight;
@@ -894,10 +905,10 @@ var updateRoom = function(room, update, view) {
 /* Runs inverse MDS on the points in a room. For inverse MDS,
  * only the selected points are included in the algorithm.
  */
-var oli = function(room, isObservation) {
+var oli = function (room, isObservation) {
     var points = {};
 
-    if (typeof(isObservation) == "undefined" || isObservation) {
+    if (typeof (isObservation) == "undefined" || isObservation) {
         for (var key of room.points.keys()) {
             var point = room.points.get(key);
 
@@ -915,7 +926,7 @@ var oli = function(room, isObservation) {
             }
         }
     }
-    else if(!isObservation) {
+    else if (!isObservation) {
         for (var key of room.attribute_points.keys()) {
             var point = room.attribute_points.get(key);
             if (point.selected) {
@@ -930,9 +941,9 @@ var oli = function(room, isObservation) {
 };
 
 /* Copies the room details we want to send to the client to a new object */
-var sendRoom = function(room, isObservation) {
+var sendRoom = function (room, isObservation) {
     var modRoom = {};
-    if (typeof(isObservation) == "undefined" || isObservation) {
+    if (typeof (isObservation) == "undefined" || isObservation) {
         modRoom.points = Array.from(room.points.values());
         modRoom.similarity_weights = Array.from(room.similarity_weights.values());
     }
@@ -944,7 +955,7 @@ var sendRoom = function(room, isObservation) {
 };
 
 /* Sends a message to a pipeline, enscapsulating it in an RPC-like fashion */
-var invoke = function(socket, func, data) {
-    var obj = {"func": func, "contents": data};
-    socket.send(JSON.stringify(obj));
+var invoke = function (socket, func, data) {
+    var obj = { "func": func, "contents": data };
+    socket.emit('msg', obj);
 };
