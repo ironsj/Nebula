@@ -296,7 +296,7 @@ class Pipeline:
             self._async_thread.start()
         
         # Finally, start the connector  
-        self._connector.start()
+        # self._connector.start()
   
     def run(self, data):
         """Executes an iteration of the pipeline, starting with the inverse
