@@ -780,7 +780,7 @@ Nebula.prototype.handleUpdate = function (room, res) {
         update.cloud = res.cloud;
     }
 
-    if (typeof (room.observation_data) != "underfined") {
+    if (typeof (room.observation_data) != "undefined") {
         updateRoom(room, update, true);
         this.clientio.to(room.name).emit('update', update, true);
     }
