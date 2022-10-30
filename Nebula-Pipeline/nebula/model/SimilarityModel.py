@@ -309,6 +309,7 @@ class SimilarityModel(pipeline.Model):
                      }
                
             request = json.dumps(request)
+            request = request.encode(encoding='UTF-8')
             # Start the Java process
             # THIS IS WHERE INVERSE MDS HAPPENS. If you want to modify the inverse MDS
             # algorithm, either change this Java code or put a Python version here
