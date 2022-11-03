@@ -2,7 +2,7 @@
 the one currently used by the Nebula Node.js server."""
 
 import json
-import logging
+# import logging
 import queue
 # import zerorpc
 # import zmq
@@ -157,8 +157,7 @@ from . import pipeline
 #This is the new connector utilizing Socket.io.  Functions similarly to the zeroMQ connector
 class SocketIOConnector (pipeline.Connector):
 
-    sio = socketio.AsyncClient(logger=True)
-    logging.basicConfig(filename="connector_log.log", filemode = 'w', level=logging.DEBUG)
+    sio = socketio.AsyncClient()
 
     def __init__(self, port=5555):
         self._update = None
@@ -177,7 +176,7 @@ class SocketIOConnector (pipeline.Connector):
         await SocketIOConnector.sio.connect(url)
         
         SocketIOConnector.sio.on("msg", self.handle_message)
-        SocketIOConnector.sio.start_background_task(self.start)
+        # SocketIOConnector.sio.start_background_task(self.start)
         await SocketIOConnector.sio.wait()
     
     def set_callbacks(self, update=None, get=None, set=None, reset=None):
@@ -193,8 +192,9 @@ class SocketIOConnector (pipeline.Connector):
         if reset:
             self._reset = reset
             
+    """
     async def start(self):
-        logging.debug("STARTING")
+        # logging.debug("STARTING")
         while True:
             # Check if we have any data to push
             try:
@@ -203,14 +203,15 @@ class SocketIOConnector (pipeline.Connector):
             except queue.Empty:
                 pass
             await self.sio.sleep(0)
-                   
+        
+    ###           
     def push_update(self, data):
         self._push_queue.put(data)
-        logging.debug(f'pushing data')
+        # logging.debug(f'pushing data')
+    """
     
     async def handle_message(self, data): 
         # We have a new request
-        logging.debug("handling data")
         
         # Make sure the request has the right format
         if "func" not in data:
@@ -244,7 +245,8 @@ class SocketIOConnector (pipeline.Connector):
             response = func_call(contents)
             
         data["contents"] = response
-        self.push_update(data)
+        await self.sio.send(data)
+        # self.push_update(data)
                 
     
     
