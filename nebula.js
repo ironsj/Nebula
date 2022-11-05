@@ -1,8 +1,9 @@
 import spawn from "child_process";
 import fs, { symlinkSync } from "fs";
+import * as readline from 'node:readline';
 import async from "async";
 import zmq from "zeromq";
-import readline from "linebyline";
+// import readline from "linebyline";
 import getPort from "get-port";
 import express from "express";
 import { Server } from "socket.io";
@@ -118,7 +119,7 @@ export default function Nebula(clientio, pipelineAddr) {
 
         /* When a client requests the list of rooms, send them the list */
         socket.on('list.sessions', function () {
-            socket.emit('list.sessions.response', Object.fromEntries(clientio.sockets.adapter.rooms));
+            socket.emit('list.sessions.response', Object.fromEntries(clientio.sockets.adapter.rooms))
         });
 
         /* When clients disconnect, remove them from the room. If the room is
@@ -223,12 +224,11 @@ export default function Nebula(clientio, pipelineAddr) {
 
             // Prepare to parse the CSV file
             var csvData = [];
-            /*const rl = readline.createInterface({
+            const rl = readline.createInterface({
                 input: fs.createReadStream(csvFilePath),
                 crlfDelay: Infinity
             });
-            */
-            const rl = readline(csvFilePath);
+            //const rl = readline(csvFilePath);
 
             // Print any error messages we encounter
             rl.on('error', function (err) {
@@ -245,6 +245,7 @@ export default function Nebula(clientio, pipelineAddr) {
                 // If we haven't saved any column names yet, do so first
                 if (columnHeaders.length == 0) {
                     columnHeaders = dataColumns;
+                    console.log(columnHeaders)
                     firstColumnName = columnHeaders[0];
                 }
 
@@ -268,6 +269,8 @@ export default function Nebula(clientio, pipelineAddr) {
                 // On certain OSs, like Windows, an extra, blank line may be read
                 // Check for this and remove it if it exists
                 var lastObservation = csvData[csvData.length - 1];
+                console.log(csvData.length)
+                // console.log(csvData)
                 var lastObservationKeys = Object.keys(lastObservation);
                 if (lastObservationKeys.length = 1 && lastObservation[lastObservationKeys[0]] == "") {
                     csvData.pop();
@@ -539,9 +542,6 @@ export default function Nebula(clientio, pipelineAddr) {
                     //Utilizing Socket.io to connect to connector
                     const httpServer = createServer();
                     this.pythonio = new Server(httpServer);
-                    this.pythonio.on("connection", (socket) => {
-                        console.log(socket.id)
-                    });
                     httpServer.listen(port);
 
                     //Setting the new socket for the room
@@ -552,7 +552,6 @@ export default function Nebula(clientio, pipelineAddr) {
                     portsInProcess.splice(portsInProcess.indexOf(port), 1);
 
                     room.pipelineSocket.on("connection", function (sock) {
-                        console.log("SEND ME A MESSAGE - Love, SERVER")
                         sock.on('message', function (data) {
                             self.handleMessage(room, JSON.stringify(data));
                         });
@@ -698,7 +697,6 @@ Nebula.prototype.handleAction = function (action, room) {
 
 /* Handles a message from the pipeline, encapsulated in an RPC-like fashion */
 Nebula.prototype.handleMessage = function (room, msg) {
-    console.log("SERVER GOT THE MESSAGE")
     var obj = JSON.parse(msg.toString());
 
     if (obj.func) {
@@ -715,7 +713,6 @@ Nebula.prototype.handleMessage = function (room, msg) {
         }
         else if (obj.func === "reset") {
             // takes place either when users joins the room or when he hits reset button
-            console.log("SERVER SHOULD RESET NOW!")
             this.clientio.to(room.name).emit("reset");
             invoke(room.pipelineSocket, "update", { interaction: "none", prototype: sirius_prototype });
         }
