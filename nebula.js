@@ -119,9 +119,7 @@ export default function Nebula(clientio, pipelineAddr) {
 
         /* When a client requests the list of rooms, send them the list */
         socket.on('list.sessions', function () {
-            console.log("listing sessions")
-            console.log("number of sessions: " + JSON.stringify(Object.fromEntries(clientio.sockets.adapter.rooms)))
-            socket.emit('list.sessions.response', clientio.sockets.adapter.rooms);
+            socket.emit('list.sessions.response', Object.fromEntries(clientio.sockets.adapter.rooms))
         });
 
         /* When clients disconnect, remove them from the room. If the room is
