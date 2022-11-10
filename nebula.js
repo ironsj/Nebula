@@ -1,4 +1,4 @@
-import spawn from "child_process";
+import { spawn, exec } from "child_process";
 import fs, { symlinkSync } from "fs";
 import * as readline from "node:readline";
 import async from "async";
@@ -117,6 +117,7 @@ export default function Nebula(clientio, pipelineAddr) {
       if (roomData && roomData.hasOwnProperty("count")) {
         roomData.count -= 1;
         console.log(socket.roomName + ": Count of room = " + roomData.count);
+        socket.leave(socket.roomName);
 
         if (roomData.count <= 0) {
           console.log(socket.roomName + ": Room now empty");
@@ -155,7 +156,7 @@ export default function Nebula(clientio, pipelineAddr) {
           deleteFile(customCSVFolder + name + "_data.csv");
 
           // Make sure the room is no longer maintained by Socket.io
-          delete clientio.sockets.adapter.rooms[name];
+          clientio.sockets.adapter.rooms.delete(name);
         }
       }
     }
@@ -237,7 +238,6 @@ export default function Nebula(clientio, pipelineAddr) {
         // If we haven't saved any column names yet, do so first
         if (columnHeaders.length == 0) {
           columnHeaders = dataColumns;
-          console.log(columnHeaders);
           firstColumnName = columnHeaders[0];
         }
 
@@ -281,8 +281,6 @@ export default function Nebula(clientio, pipelineAddr) {
     socket.on("setData", function (data, room) {
       // Create the csvFilePath
       csvFilePath = customCSVFolder + room + "_data.csv";
-      // Set exec to be a function that calls the command line
-      var exec = require("child_process").exec;
 
       // Initialize errors to be an empty array to capture any errors
       var errors = [];
@@ -503,7 +501,7 @@ export default function Nebula(clientio, pipelineAddr) {
             console.log(pythonArgs);
             console.log("");
 
-            var pipelineInstance = spawn.spawn("python3", pythonArgs, {
+            var pipelineInstance = spawn("python3", pythonArgs, {
               stdout: "inherit",
             });
 
@@ -511,7 +509,7 @@ export default function Nebula(clientio, pipelineAddr) {
               console.log(
                 socket.roomName + ": python3.exe not found. Trying python.exe"
               );
-              pipelineInstance = spawn.spawn("python3", pythonArgs, {
+              pipelineInstance = spawn("python3", pythonArgs, {
                 stdout: "inherit",
               });
 
