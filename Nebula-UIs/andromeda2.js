@@ -645,68 +645,6 @@ function updateIndicators() {
 
 
 function update(data) {
-    if (data.similarity_weights) {
-        /*id: "Final Fantasy 4",
-
-            weight: 0.5,
-            order: 0,
-
-            values: []*/
-        var tempSliders = []
-        for (var i = 0; i < data.similarity_weights.length; i++) {
-            var attribute = data.similarity_weights[i];
-
-            for (var j = 0; j < sliders.length; j++) {
-                if (sliders[j].id === attribute.id) {
-                    sliders[j].weight = attribute.weight;
-                    break;
-                }
-            }
-
-            if (j === sliders.length) {
-                var obj = {};
-                obj.id = attribute.id;
-                obj.weight = attribute.weight;
-                obj.values = [];
-
-                tempSliders.push(obj);
-            }
-
-            if (tempSliders.length === data.similarity_weights.length) {
-                sliders.length = 0;
-                sliders = tempSliders;
-            }
-            else {
-                sliders.concat(tempSliders);
-            }
-        }
-
-        sliders.sort(function (a, b) {
-            if (a.weight < b.weight) {
-                return 1;
-            }
-            else if (a.weight > b.weight) {
-                return -1;
-            }
-            else if (a.id < b.id) {
-                return -1;
-            }
-            else if (a.id > b.id) {
-                return 1;
-            }
-            else {
-                return 0;
-            }
-        });
-
-        for (var i = 0; i < sliders.length; i++) {
-            sliders[i].order = i;
-        }
-
-        updateSlider();
-        updateIndicators();
-    }
-
     /* Update format:
      * points: [
      *  {
@@ -816,6 +754,68 @@ function update(data) {
         });
         calculateRelevances();
         updateLayout();
+    }
+
+    if (data.similarity_weights) {
+        /*id: "Final Fantasy 4",
+
+            weight: 0.5,
+            order: 0,
+
+            values: []*/
+        var tempSliders = []
+        for (var i = 0; i < data.similarity_weights.length; i++) {
+            var attribute = data.similarity_weights[i];
+
+            for (var j = 0; j < sliders.length; j++) {
+                if (sliders[j].id === attribute.id) {
+                    sliders[j].weight = attribute.weight;
+                    break;
+                }
+            }
+
+            if (j === sliders.length) {
+                var obj = {};
+                obj.id = attribute.id;
+                obj.weight = attribute.weight;
+                obj.values = [];
+
+                tempSliders.push(obj);
+            }
+
+            if (tempSliders.length === data.similarity_weights.length) {
+                sliders.length = 0;
+                sliders = tempSliders;
+            }
+            else {
+                sliders.concat(tempSliders);
+            }
+        }
+
+        sliders.sort(function (a, b) {
+            if (a.weight < b.weight) {
+                return 1;
+            }
+            else if (a.weight > b.weight) {
+                return -1;
+            }
+            else if (a.id < b.id) {
+                return -1;
+            }
+            else if (a.id > b.id) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+
+        for (var i = 0; i < sliders.length; i++) {
+            sliders[i].order = i;
+        }
+
+        updateSlider();
+        updateIndicators();
     }
 }
 
