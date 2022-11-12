@@ -15,14 +15,14 @@ var piheight = 0;
 var sessionDiv = d3.select("#sessionDiv");
 if (!sessionDiv.node()) {
     sessionDiv = d3.select("body").append("div")
-    .attr("id", "sessionDiv")
-    .attr("class", "container-fluid")
-    .style("height", "75px")
-    .style("margin-left", "20px")
-    .style("position", "relative")
-    .style("z-index", "1");
+        .attr("id", "sessionDiv")
+        .attr("class", "container-fluid")
+        .style("height", "75px")
+        .style("margin-left", "20px")
+        .style("position", "relative")
+        .style("z-index", "1");
 }
-    
+
 // Add a session dropdown menu to the sessionDiv using D3
 // When clicked, call sessionDropdownClick
 var sessionDiv = sessionDiv.append("div")
@@ -48,29 +48,29 @@ dropdownOptions.append("li").append("a").text(defaultDropdownOption).on("click",
 function sessionDropdownClick() {
     // Capture the sessionSelection object
     var e = this;
-    
+
     // Define the callback for when we receive the list of sessions from the
     // server
     var listSessions = function (allSessions) {
         // Reset the list of sessions. This ensures old/nonexistent sessions
         // are removed
         sessions = [defaultDropdownOption];
-        
+
         // Iterate through the list of sessions and add them to the list
         for (var session in allSessions) {
-            if (session.search(ui) != -1 && session  != '' && sessions.indexOf(session) < 0) {
+            if (session.search(ui) != -1 && session != '' && sessions.indexOf(session) < 0) {
                 sessions.push(session);
-            }  
+            }
         }
-        
+
         // Update the dropdown menu accordingly
         updateDropdownList(e);
     };
-    
+
     // Create a respose for the "list.rooms.response" to update the list of rooms
     // in the dropdown menu based on the list received from the server
     socket.on('list.sessions.response', listSessions);
-    
+
     // Tell the server we need a list of rooms, which is handed back using the
     // "list.rooms.response" message
     socket.emit('list.sessions');
@@ -87,7 +87,7 @@ function sessionChange() {
     // as the CosmosD3 pipeline, so the pipelineType should be "cosmos". In all
     // other cases, pipelineType is the same as the UI.
     var selectedSession = this.text;
-    socket.on("receiveDefaultFileList", function(dataList, defaultData) {
+    socket.on("receiveDefaultFileList", function (dataList, defaultData) {
         // Define the JQuery dialog that will pop up to allow data selection
         var fileSelect = d3.select("#sessionDiv").append("div")
             .attr("id", "fileSelectOptions")
@@ -108,7 +108,7 @@ function sessionChange() {
             .style("border-radius", "5px")
             .style("overflow-y", "scroll")
             .append("ul").style("list-style", "none").style("padding", "10px");
-    
+
         var i;
         var defaultColor = "white";
         var hoverColor = "lightgray";
@@ -116,17 +116,17 @@ function sessionChange() {
         var selectedFile = defaultData;
         for (i = 0; i < dataList.length; i++) {
             defaultFileSelect.append("li").text(dataList[i])
-                .style("background-color", function() {
+                .style("background-color", function () {
                     if (dataList[i] == defaultData) {
                         return selectedColor;
                     }
                 })
-                .attr("selected", function() {
+                .attr("selected", function () {
                     if (dataList[i] == defaultData) {
                         return "True";
                     }
                 })
-                .on("click", function() {
+                .on("click", function () {
                     var selectedData = d3.select(this);
                     d3.select(this.parentNode).selectAll("li")
                         .style("background-color", defaultColor)
@@ -141,10 +141,10 @@ function sessionChange() {
                         isTextData = false;
                     }
                 })
-                .on("mouseover", function() {
+                .on("mouseover", function () {
                     d3.select(this).style("background-color", hoverColor);
                 })
-                .on("mouseout", function() {
+                .on("mouseout", function () {
                     var thisData = d3.select(this);
                     if (thisData.attr("selected") != "True") {
                         thisData.style("background-color", defaultColor);
@@ -154,25 +154,26 @@ function sessionChange() {
                     }
                 });
         }
-        
+
         // Create the full set of Jquery dialog buttons that might be available
-        var dialogButtons = {"Use Selected Data": function() {
+        var dialogButtons = {
+            "Use Selected Data": function () {
                 piheight = 0;
                 createNewSessionName(dropdownOptions, dropdownButton, selectedFile);
-                $( this ).dialog( "close" );
+                $(this).dialog("close");
             },
-            "Upload Data": function() {
+            "Upload Data": function () {
                 piheight = 0;
                 document.getElementById("fileInput")
                     .addEventListener("change", fileSelectWrapper(dropdownOptions), false);
                 $('#fileInput').click();
-                $( this ).dialog( "close" );
+                $(this).dialog("close");
             },
-            "Cancel": function() {
-                $( this ).dialog( "close" );
+            "Cancel": function () {
+                $(this).dialog("close");
             }
         };
-    
+
         // If the UI does not support custom CSV upload, remove that button from
         // the JQuery dialog
         if (csvUploadUIs.indexOf(ui) < 0) {
@@ -180,8 +181,8 @@ function sessionChange() {
         }
 
         // Show the JQuery dialog
-        $( function() {
-            $( "#fileSelectOptions" ).dialog({
+        $(function () {
+            $("#fileSelectOptions").dialog({
                 resizable: false,
                 height: "auto",
                 width: 400,
@@ -189,16 +190,16 @@ function sessionChange() {
                 buttons: dialogButtons
             });
         });
-        
+
         // Ensure the dialog box doesn't pop up again when it's not supposed to
         socket.removeListener("receiveDefaultFileList");
     });
-    
+
     // If the radar interface is being used, specify the low_dimensions returned
     // by WMDS to be 1 and set the pipeline type to "cosmos" (since the pipeline
     // is the same otherwise)
     if (ui == "radar") {
-        extraJoinSessionParams = {'low_dimensions': 1};
+        extraJoinSessionParams = { 'low_dimensions': 1 };
         pipelineType = "cosmos";
     }
     else {
@@ -207,12 +208,12 @@ function sessionChange() {
 
     // Handle the creation of a new room
     if (selectedSession == defaultDropdownOption) {
-        
+
         // If the UI does not enable selecting a particular dataset, just connect
         if (autoConnectUIs.indexOf(ui) >= 0) {
             createNewSessionName(dropdownOptions, dropdownButton);
         }
-        
+
         // Otherwise, create the JDialog to have the user select/upload data
         else {
             socket.emit("getDefaultFileList", textOnlyUIs.indexOf(ui) >= 0, ui);
@@ -244,30 +245,30 @@ function sessionChange() {
 // This allows the session dropdown menu to be appropriately bound in the event
 // listener
 function fileSelectWrapper(sessionOptionsDropdown) {
-    return function(e) {
+    return function (e) {
         fileSelect(e, sessionOptionsDropdown);
     };
 }
 
 // A wrapper for what to do when a CSV file has been chosen
-var csvDataReadyFunction = function() {
+var csvDataReadyFunction = function () {
 
     // Set the nodes array from the UI javascript file to an empty
     // array and delete all nodes from the graph
     nodes = [];
     d3.selectAll(".nodes").remove();
-    
+
     // Tell the server that we are joining a new room/session
     resetSocketCallbacks();
     socket.emit('join', currentSessionName, socket.id, pipelineType, extraJoinSessionParams);
 }
 
-var csvDataReadCompleteFunction = function(csvContents, firstKey) {
+var csvDataReadCompleteFunction = function (csvContents, firstKey) {
     // We don't want to create a CSV table for Andromeda
     if (ui !== "andromeda") {
-        
+
         var rawTableContainer = d3.select("body").append("div").attr("class", "container-fluid");
-        
+
         // Initialize the rawDataTable variable
         var rawTableBtnDiv = rawTableContainer.append("div")
             .attr("class", "col-md-12")
@@ -276,7 +277,7 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
             .attr("type", "submit")
             .attr("value", "Show Raw Data Table")
             .attr("class", "btn btn-md btn-default")
-            .on("click", function() {
+            .on("click", function () {
 
                 // Remove the button to ensure only 1 table is made
                 rawTableBtnDiv.remove();
@@ -301,7 +302,7 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
                 dataKeys = [firstKey].concat(dataKeys.sort());
 
                 // Sort the objects
-                csvContents.sort((a, b)=> (a[dataKeys[0]] > b[dataKeys[0]]) ? 1 : -1 );
+                csvContents.sort((a, b) => (a[dataKeys[0]] > b[dataKeys[0]]) ? 1 : -1);
 
                 // Create the first row of the table
                 var firstRow = "<thead><tr>";
@@ -314,12 +315,12 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
 
                 // Create each individual row of the table
                 rawDataTable += "<tbody>";
-                csvContents.forEach(function(csvRow) {
+                csvContents.forEach(function (csvRow) {
 
                     var nextRow = "<tr>";
 
                     // Create each entry for the current row
-                    dataKeys.forEach(function(dataKey, i) {
+                    dataKeys.forEach(function (dataKey, i) {
 
                         var td;
                         var tdEnd;
@@ -334,8 +335,8 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
                             // Add an ID and tooltip for each td
                             var observationName = csvRow[firstKey];
                             td += "id='o-" + observationName.replace(/\/|<|>|\.| |'/g, "-")
-                                + "--a-" +  dataKey.replace(/\/|<|>|\.| |'/g, "-") + "' " +
-                                "title=\"" + observationName + ", " +  dataKey + "\">";
+                                + "--a-" + dataKey.replace(/\/|<|>|\.| |'/g, "-") + "' " +
+                                "title=\"" + observationName + ", " + dataKey + "\">";
                         }
 
                         // Put the data in the cell and add the cell to the table row
@@ -353,11 +354,11 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
 
                 // Highlight row when mousing over
                 d3.select("#rawDataTable").selectAll("tr")
-                    .on("mouseover", function() {
+                    .on("mouseover", function () {
                         d3.select(this).classed("selected-row", true)
                             .selectAll("td").style("background-color", "yellow");
                     })
-                    .on("mouseout", function() {
+                    .on("mouseout", function () {
                         d3.select(this).classed("selected-row", false)
                             .selectAll("td").style("background-color", "white");
                     });
@@ -365,16 +366,16 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
                 // Highlight column when mousing over
                 // Code adapted from https://stackoverflow.com/questions/38131000/how-to-highlight-a-column-in-html-table-on-click-using-js-or-jquery
                 d3.select("#rawDataTable").selectAll("td")
-                    .on("mouseover", function() {
+                    .on("mouseover", function () {
                         var index = $(this).index();
-                        $("#rawDataTable tr").each(function(i, tr) {
-                           $(tr).find('td').eq(index-1).css("background-color", "yellow");
+                        $("#rawDataTable tr").each(function (i, tr) {
+                            $(tr).find('td').eq(index - 1).css("background-color", "yellow");
                         });
                     })
-                    .on ("mouseout", function() {
+                    .on("mouseout", function () {
                         var index = $(this).index();
-                        $("#rawDataTable tr").each(function(j, tr) {
-                            $(tr).find('td').eq(index-1).each(function(k, td) {
+                        $("#rawDataTable tr").each(function (j, tr) {
+                            $(tr).find('td').eq(index - 1).each(function (k, td) {
                                 if (!$(tr).hasClass("selected-row")) {
                                     $(td).css("background-color", "white");
                                 }
@@ -387,60 +388,60 @@ var csvDataReadCompleteFunction = function(csvContents, firstKey) {
 
 // The function that handles what to do when a custom CSV file is selected
 function fileSelect(e, sessionOptionsDropdown) {
-        // Get the selected file
-        var file = e.target.files[0];
-        
-        // Create a FileReader to read the contents of the selected file
-        var fileReader = new FileReader();
-        
-        // When the FileReader is told to read the file, get the contents of the
-        // file, send the contents to the server, wait until the server has
-        // completed creating the new file, and join a new room
-        var contents;
-       	fileReader.onload = function(e) {
-            // Get the contents of the file
-            contents = e.target.result;
+    // Get the selected file
+    var file = e.target.files[0];
 
-//                contents = contents.split(new RegExp("\n|\r", "g")).filter(function(string) {
-//                    return string != "";
-//                });
+    // Create a FileReader to read the contents of the selected file
+    var fileReader = new FileReader();
 
-            // Get a new room/session name
-            socket.removeListener("receiveSessionName");
-            socket.on("receiveSessionName", function(sessionName) {
-                if (currentSessionName != "FAKE") {
-                    socket.emit('session-change');
-                }
-                currentSessionName = sessionName;
-                addOptionToSessionDropdown(sessionOptionsDropdown, currentSessionName);
-                dropdownButton.text(sessionName);
-                dropdownButton.append("span").attr("class", "caret").style("margin-left", "10px");
+    // When the FileReader is told to read the file, get the contents of the
+    // file, send the contents to the server, wait until the server has
+    // completed creating the new file, and join a new room
+    var contents;
+    fileReader.onload = function (e) {
+        // Get the contents of the file
+        contents = e.target.result;
 
-                // Create a listener for the "csvDataReady" funtion that is sent by
-                // the server after it creates the custom CSV file
-                // The UI's nodes are reset, the file select buttons are deleted, and
-                // the new room is joined
-                socket.on("csvDataReady", csvDataReadyFunction);
-                socket.on("csvDataReadComplete", csvDataReadCompleteFunction);
-            
-                // Send the "setData" message to the server with the contents of the
-                // user-specified CSV file and the name of the room/session that
-                // will be joined
-                socket.emit("setData", contents, currentSessionName);
-            });
-            socket.emit("getSessionName", ui);
-        }
+        //                contents = contents.split(new RegExp("\n|\r", "g")).filter(function(string) {
+        //                    return string != "";
+        //                });
 
-        // Tell the FileReader to read the given file as a text file
-        // This triggers the previously defined onload function for the fileReader
-	fileReader.readAsText(file);
+        // Get a new room/session name
+        socket.removeListener("receiveSessionName");
+        socket.on("receiveSessionName", function (sessionName) {
+            if (currentSessionName != "FAKE") {
+                socket.emit('session-change');
+            }
+            currentSessionName = sessionName;
+            addOptionToSessionDropdown(sessionOptionsDropdown, currentSessionName);
+            dropdownButton.text(sessionName);
+            dropdownButton.append("span").attr("class", "caret").style("margin-left", "10px");
+
+            // Create a listener for the "csvDataReady" funtion that is sent by
+            // the server after it creates the custom CSV file
+            // The UI's nodes are reset, the file select buttons are deleted, and
+            // the new room is joined
+            socket.on("csvDataReady", csvDataReadyFunction);
+            socket.on("csvDataReadComplete", csvDataReadCompleteFunction);
+
+            // Send the "setData" message to the server with the contents of the
+            // user-specified CSV file and the name of the room/session that
+            // will be joined
+            socket.emit("setData", contents, currentSessionName);
+        });
+        socket.emit("getSessionName", ui);
+    }
+
+    // Tell the FileReader to read the given file as a text file
+    // This triggers the previously defined onload function for the fileReader
+    fileReader.readAsText(file);
 }
 
 // A helper function to add a new option to the session dropdown menu
 function addOptionToSessionDropdown(dropdown, session) {
     // Append the new session to the end of the dropdown menu
-    dropdown.append("li").append("a").text(session);
-    
+    dropdown.append("li").append("a").text(session).on("click", sessionChange);;
+
     // Append the new session to the sessions array to keep track of which sessions
     // are already in the list
     sessions.push(session);
@@ -449,8 +450,8 @@ function addOptionToSessionDropdown(dropdown, session) {
 // A helper function to generate a new room/session name, add it to the session
 // dropdown menu, make this new session name selected in the dropdown menu, and
 // return the name of the new sesson
-function createNewSessionName(sessionOptions, sessionButton, selectedFile=null) {
-    socket.on("receiveSessionName", function(sessionName) {
+function createNewSessionName(sessionOptions, sessionButton, selectedFile = null) {
+    socket.on("receiveSessionName", function (sessionName) {
         // If we're switching sessions, let the server know
         if (currentSessionName != "FAKE") {
             socket.emit('session-change');
@@ -477,9 +478,9 @@ function createNewSessionName(sessionOptions, sessionButton, selectedFile=null) 
 function updateDropdownList(dropdownListObject) {
     // Grab all the listed sessions
     var dropdownOptionsList = dropdownOptions.selectAll("li")[0];
-            
+
     // Remove sessions that are no longer active
-    dropdownOptionsList.forEach(function(dropdownOption) {
+    dropdownOptionsList.forEach(function (dropdownOption) {
         if (dropdownOption) {
             var dropdownOptionText = d3.select(dropdownOption).select("a").text();
             if (dropdownOptionText != defaultDropdownOption && sessions.indexOf(dropdownOptionText) < 0) {
@@ -488,16 +489,16 @@ function updateDropdownList(dropdownListObject) {
             }
         }
     });
-    
+
     // Add sessions that aren't listed yet
     for (var i = 1; i < sessions.length; i++) {
         var sessionListed = false;
-        dropdownOptionsList.forEach(function(dropdownOption) {
+        dropdownOptionsList.forEach(function (dropdownOption) {
             if (dropdownOption && sessions[i] == d3.select(dropdownOption).select("a").text()) {
                 sessionListed = true;
             }
         });
-        
+
         if (!sessionListed) {
             dropdownOptions.append("li").append("a").text(sessions[i]).on("click", sessionChange);
         }
@@ -506,9 +507,9 @@ function updateDropdownList(dropdownListObject) {
 
 var sessionDisconnect;
 
-window.onload = function() {
-    sessionDisconnect = function() {
-        socket.on('disconnect', function() {
+window.onload = function () {
+    sessionDisconnect = function () {
+        socket.on('disconnect', function () {
             d3.selectAll("div").remove();
             d3.select("body").append("h3").text("Your communication with the server " +
                 "has been interrupted. Please refresh this page to reconnect.");
