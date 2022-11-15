@@ -918,8 +918,8 @@ class ImportanceModel(pipeline.Model):
                 # relevance threshold, add it to the list of candidates to
                 # potentially add to the working set
                 oli_interaction_relevance = self._relevance(active_set[item_id], isSearchingForDocs)
-		if (oli_interaction_relevance > relevance_threshold):
-                    oli_item_matches.append(item_id)
+                if (oli_interaction_relevance > relevance_threshold):
+                            oli_item_matches.append(item_id)
 
         # Now that we have changed the (e.g., attribute) weights based on the interaction, check 
         # each item (e.g., document) in the active set to see whether it is a candidate to 
