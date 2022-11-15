@@ -511,6 +511,7 @@ class TwoView_SimilarityModel(pipeline.Model):
                      "distanceFunc": self.dist_func
                      }
             request = json.dumps(request)
+            request = request.encode(encoding='UTF-8')
             
             # Start the Java process
             # THIS IS WHERE INVERSE MDS HAPPENS. If you want to modify the inverse MDS

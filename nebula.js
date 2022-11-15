@@ -801,7 +801,7 @@ Nebula.prototype.handleUpdate = function (room, res) {
 				obj.type = "observation";
 				if (res.ATTRIBUTE.similarity_weights) {
 					for (var j = 0; j < res.ATTRIBUTE.similarity_weights.length; j++) {
-						weight = res.ATTRIBUTE.similarity_weights[j];
+						var weight = res.ATTRIBUTE.similarity_weights[j];
 						if (weight.id == obj.id) {
 							obj.relevance = weight.weight;
 						}

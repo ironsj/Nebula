@@ -34,7 +34,7 @@ class TwoView_CSVDataController(pipeline.DataController):
         attrs_high_d = []
         with open(csvfile, "rU") as f:
             reader = csv.reader(f)
-            self._columns = reader.next()[1:]
+            self._columns = next(reader)[1:]
             for i in range(len(self._columns)):
                 self._attributes[self._columns[i]] = i
                 
