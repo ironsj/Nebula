@@ -165,7 +165,7 @@ function sessionChange() {
             "Upload Data": function () {
                 piheight = 0;
                 document.getElementById("fileInput")
-                    .addEventListener("change", fileSelectWrapper(dropdownOptions), false);
+                    .addEventListener("change", fileSelectWrapper(dropdownOptions), { once: true });
                 $('#fileInput').click();
                 $(this).dialog("close");
             },
