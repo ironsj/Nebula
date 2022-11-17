@@ -397,8 +397,9 @@ class ActiveSetModel(pipeline.Model):
                 oli_interaction_relevance = 0
                 
                 oli_interaction_relevance = self._relevance(self._active_set[doc_id])
-		if (oli_interaction_relevance > 0.1):
-                    oli_doc_matches.append(doc_id)
+		
+        if (oli_interaction_relevance > 0.1):
+            oli_doc_matches.append(doc_id)
 
         # Now that we have changed the weights based on the interaction, check 
         # each document in the active set to see whether it is a candidate to 
