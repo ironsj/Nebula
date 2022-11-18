@@ -1,21 +1,31 @@
 import sys
-#sys.path.append('Nebula-Pipeline')
-import nebula.connector
-from nebula.data_controller.ESController import ESController
-from nebula.model.ActiveSetModel import ActiveSetModel
-from nebula.model.TopicModel import TopicModel
-from nebula.model.TopicSimilarityModel import TopicSimilarityModel
-import nebula.pipeline
-from nebula.model.tf import TFModel
+import zerorpc
+import os
 
-import sys
+# Most recent version of Python3 needs some help to find reletive paths to modules.
+# The follwoing three lines will ensure that Python3 will be able to find the modules
+# that are needed in this file.
+script_dir = os.path.dirname( __file__ )
+nebula_pipeline_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline')
+sys.path.append(nebula_pipeline_dir)
+data_controller_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline', 'data_controller')
+sys.path.append(data_controller_dir)
+model_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline', 'model')
+sys.path.append(model_dir)
 
-def main():
+from nebula.pipeline import Pipeline
+from nebula.connector import SocketIOConnector
+from nebula.data_controller.TwoView_CSVDataController import TwoView_CSVDataController
+from nebula.model.ImportanceModel import ImportanceModel
+from nebula.model.TwoView_SimilarityModel import TwoView_SimilarityModel
+import asyncio
+
+async def main():
     if len(sys.argv) < 2:
         print("Usage: python main.py <port> <csv file path> <raw data folder path> <pipeline arguments>")
    
     
-    pipeline = nebula.pipeline.Pipeline()
+    pipeline = Pipeline()
    
     relevance = ActiveSetModel()
     similarity = TopicSimilarityModel()
@@ -30,10 +40,13 @@ def main():
     pipeline.append_model(similarity)
     pipeline.set_data_controller(data_controller)
     
-    connector = nebula.connector.ZeroMQConnector(port=int(sys.argv[1]))
+    connector = SocketIOConnector(port=int(sys.argv[1]))
+
     pipeline.set_connector(connector)
+
+    await connector.makeConnection(port=int(sys.argv[1]))
     
     pipeline.start(sys.argv[2:])
     
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
