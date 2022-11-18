@@ -62,6 +62,8 @@ async def main():
     
     # Note: a pipeline contains exactly one connector
     pipeline.set_connector(connector)
+
+    await connector.makeConnection(port=int(sys.argv[1]))
     
     pipeline.start(sys.argv[4:])
     
