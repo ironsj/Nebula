@@ -1,5 +1,4 @@
 import sys
-import zerorpc
 import os
 
 # Most recent version of Python3 needs some help to find reletive paths to modules.
@@ -40,8 +39,6 @@ async def main():
     
     data_controller = TwoView_CSVDataController(csvfile, raw_folder)
    
-    
-    
     pipeline.append_model(relevance_model)
     pipeline.append_model(similarity_model)
     

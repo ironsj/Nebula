@@ -1,13 +1,25 @@
-from nebula.connector import PrintConnector
+import os
+import sys
+
+# Most recent version of Python3 needs some help to find reletive paths to modules.
+# The follwoing three lines will ensure that Python3 will be able to find the modules
+# that are needed in this file.
+script_dir = os.path.dirname( __file__ )
+nebula_pipeline_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline')
+sys.path.append(nebula_pipeline_dir)
+data_controller_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline', 'data_controller')
+sys.path.append(data_controller_dir)
+model_dir = os.path.join( script_dir, '..', 'Nebula-Pipeline', 'model')
+sys.path.append(model_dir)
+
+from nebula.pipeline import Pipeline
+from nebula.connector import SocketIOConnector
 from nebula.data_controller.TwoView_CSVDataController import TwoView_CSVDataController
 from nebula.model.ImportanceModel import ImportanceModel
 from nebula.model.TwoView_SimilarityModel import TwoView_SimilarityModel
-from nebula.pipeline import Pipeline
+import asyncio
 
-import sys
-import zerorpc
-
-def main():
+async def main():
     if len(sys.argv) < 4:
         print("Usage: python main.py <port> <csv file path> <raw data folder path> <pipeline arguments>")
     
@@ -26,10 +38,6 @@ def main():
     
     
     data_controller = TwoView_CSVDataController(csvfile, raw_folder)
-   
-    
-    connector = PrintConnector(port=int(sys.argv[1]))
-    
     
     pipeline.append_model(relevance_model)
     pipeline.append_model(similarity_model)
@@ -37,8 +45,13 @@ def main():
     # Note: a pipeline contains exactly one data controller
     pipeline.set_data_controller(data_controller)
     
+    connector = SocketIOConnector(port=int(sys.argv[1]))
+    
     # Note: a pipeline contains exactly one connector
     pipeline.set_connector(connector)
+    
+    # Following line creates a connection between the Python3 code and JS code
+    await connector.makeConnection(port=int(sys.argv[1]))
     
     # Starts the pipeline, running the setup for the data controller and each
     # model, and then tells the connector to start listening for connections.
@@ -47,4 +60,4 @@ def main():
     pipeline.start(sys.argv[4:])
     
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
