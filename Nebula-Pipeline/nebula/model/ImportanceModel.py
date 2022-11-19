@@ -55,7 +55,7 @@ class ImportanceModel(pipeline.Model):
         self.new_limit = new_limit
         
         # Dynamically set the transitive new limit
-        self.transitive_new_limit = self.new_limit / 2
+        self.transitive_new_limit = self.new_limit // 2
         
         # Maximum number of documents allowed in the working set
         self.working_limit = working_limit
@@ -281,7 +281,6 @@ class ImportanceModel(pipeline.Model):
     account for the fact that a larger number of weights will try
     to squash our weights even more """
     def _rescale_weights(self, weights):
-        
         # First check that we have weights to manipulate
         if len(weights) > 0:
         
@@ -409,7 +408,7 @@ class ImportanceModel(pipeline.Model):
 
 
         if ATTRIBUTE_LIST in data:
-            self._update_working_set((x[ATTRIBTUE_ID] for x in data[ATTRIBUTE_LIST]), False)
+            self._update_working_set((x[ATTRIBUTE_ID] for x in data[ATTRIBUTE_LIST]), False)
        
 	
         data[DOCUMENTS] = list(self._doc_working_set.values())
@@ -785,14 +784,14 @@ class ImportanceModel(pipeline.Model):
            
             for item in data_list:   
                 if item not in interaction_list:
-                    tweights_delta[item] = ((weight_diff)/total_num_items)
+                    weights_delta[item] = ((weight_diff)/total_num_items)
                     count += weights_delta[item]
              
         elif weight_decrease:
             while  (weight_diff > 0):
                 zero_weight = True
                 counter = 0  
-                delta_diff = 0  
+                delta_diff = 0
                 delta_dec = weight_diff/total_num_items
                
                 for item in data_list:
@@ -835,7 +834,7 @@ class ImportanceModel(pipeline.Model):
             while(weight_diff > 0 and weight_decrease):
                 delta_diff = 0  
                 counter = 0
-                delta_dec = weight_diff/total_num_items 
+                delta_dec = weight_diff/total_num_items
                 for inter_item in interaction_list: 
                     if(weights[inter_item] + weights_delta[inter_item] - delta_dec) > 0:
                         weights_delta[inter_item] -= delta_dec
