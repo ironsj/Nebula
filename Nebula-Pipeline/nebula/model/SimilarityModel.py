@@ -152,12 +152,13 @@ class SimilarityModel(pipeline.Model):
         
         return (high_d, weight_list)
     
-    def _pairwise_distance(self, high_d, weight_list):
+    def _pairwise_distance(self, positions, weight_list):
         """Calculate a weighted pairwise distance matrix for the high 
-        dimensional positions."""
-        num_docs = len(high_d)
+        dimensional or low dimensional positions. For low_d weight_ list
+        should be all ones."""
+        num_docs = len(positions)
         
-        # Compute the pairwise distance of the high dimensional points
+        # Compute the pairwise distance of the dimensional points
         pdist = np.zeros((num_docs, num_docs), dtype=np.float64)
         weight_list = [x[1] for x in weight_list]
        
@@ -167,7 +168,7 @@ class SimilarityModel(pipeline.Model):
             dist_func = cosine
         for i in range(0, num_docs - 1):
             for j in range(i + 1, num_docs):
-                d = dist_func(high_d[i], high_d[j], weight_list)
+                d = dist_func(positions[i], positions[j], weight_list)
                 pdist[i][j] = d
                 pdist[j][i] = d
             
