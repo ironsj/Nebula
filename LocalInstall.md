@@ -1,42 +1,81 @@
-`sudo apt-get install -y curl`
+For these instructions to work properly, make sure your current working directory is **Nebula**
 
 ```
-curl -fsSL https://deb.nodesource.com/setup_17.x | sudo -E bash -
+sudo apt install -y curl
+```
+
+```
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash 
+```
+
+```
 sudo apt-get install -y nodejs
 ```
 
-`sudo apt-get install -y libzmq3-dev python python3-pip`
+```
+sudo apt install -y python python3-pip
+```
 
-`sudo apt-get update`
+```
+sudo apt update
+```
 
-`sudo apt-get install -y openjdk-8-jdk`
+```
+sudo apt install -y openjdk-8-jdk
+```
 
-`sudo apt-get install -y ant`
+```
+sudo apt install -y ant
+```
 
-`sudo apt-get install ca-certificates-java `
+```
+sudo apt-get install ca-certificates-java
+```
 
-`sudo apt-get clean`
+```
+sudo apt clean
+```
 
-`sudo update-ca-certificates -f`
+```
+sudo update-ca-certificates -f
+```
 
-`sudo apt-get install wget`
+```
+wget https://bootstrap.pypa.io/pip/get-pip.py
+```
 
-`wget https://bootstrap.pypa.io/pip/get-pip.py`
+```
+sudo python3 get-pip.py
+```
 
-`sudo python3 get-pip.py`
+```
+sudo pip3 install -e ./Nebula-Pipeline
+```
 
-`sudo pip3 install ./Nebula-Pipeline/dist/nebula-1.0-py2.py3-none-any.whl`
+```
+sudo python3 -m nltk.downloader stopwords
+```
 
-`sudo python3 -m nltk.downloader stopwords`
+```
+sudo npm install -g npm@9.1.2
+```
 
-`sudo npm install -g npm@8.7.0`
+```
+sudo npm install -g nodemon@^2.0.15
+```
 
-`sudo npm install -g nodemon@^2.0.15`
+```
+sudo npm install
+```
 
-`sudo npm install`
+```
+sudo pip3 install -U scikit-learn
+```
 
-`sudo pip3 install -U scikit-learn`
+**TO RUN:**
 
-TO RUN:
+```
+sudo npm start
+```
 
-`sudo npm start`
+Then open *localhost:4040* in your browser
