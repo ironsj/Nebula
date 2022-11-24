@@ -4,7 +4,7 @@ This project acts as the visualization controller. It is a Node.js server that m
 # Installation
 There are two different installation strategies: Using Docker or following more traditional installation strategies. Docker lets you get a new machine up and running within minutes, but it can require rebuilding Docker images to see changes reflected in one of our UIs, depending on what you're changing and how you're running your Docker containers.
 
-Regardless of which method you choose, you first need to **clone this repository (and the CosmosD3 and Nebula-Pipeline repositories)** onto your local machine. (Be sure you have git installed, and install it [here](https://git-scm.com/downloads) if you don't have it already. You don't need the GUI; the command line tool should be sufficient and will likely cause you fewer issues with this project.) When initialing cloning from git, be sure to either run `git clone --recursive` (recommended), or `git submodule init` followed by `git submodule update` to pull in the CosmosD3 and Nebula-Pipeline submodules.
+Regardless of which method you choose, you first need to **clone this repository (and the CosmosD3 and Nebula-Pipeline repositories)** onto your local machine. (Be sure you have git installed, and install it [here](https://git-scm.com/downloads) if you don't have it already. You don't need the GUI; the command line tool should be sufficient and will likely cause you fewer issues with this project.) When initialing cloning from git, be sure to either run `git clone --recurse-submodules` (recommended), or `git submodule init` followed by `git submodule update` to pull in the CosmosD3 and Nebula-Pipeline submodules.
 
 ## Docker Installation
 Make sure you have a version of **Docker** installed from [the official website](https://docs.docker.com/install/) (look to the menu on the left to get a version installed for your OS, making sure to double check your system requirements and installing the older Docker Toolbox if necessary, and note that **Docker Desktop is not compatible with VirtualBox**). Just about any version of Docker should do; we are just using *images* and *containers*, not *services*, *networks*, or any other Docker features.
@@ -36,17 +36,17 @@ For example, I call my image `nebulaserver`. The `.` simply specifies your curre
 
 *Developer Tip:* If you have already used Docker before and are trying to create a new, updated image (based on changes to the Docker file), use the `--no-cache` flag to force Docker to completely rebuild the image from scratch (i.e., without any cached information): `docker build --no-cache -t imageName .` This may take longer for Docker to create the image.
 
-Your docker image is not yet running. To run it, you need to use `docker run -p hostPort:containerPort imageName`. This **runs the given image (e.g., `nebulaserver`) within a container**, where the image is running the given application on `containerPort` (which for us is typically `8081` or `80`, as defined in app.js; this port is then "exposed" to the host machine with the `EXPOSE` command in the Dockerfile). This container port is then mapped to the given host port, which can be any unused port you want it to be (e.g, `80`). Your app should now be ready for you to use. You will see in your console printout from within your container print to the terminal window that you launched your container in. Note, however, that your container will be unresponsive to any keyboard input from this terminal window (including the typical `CTRL+C` to stop the Node.js server).
+Your docker image is not yet running. To run it, you need to use `docker run -p hostPort:containerPort imageName`. This **runs the given image (e.g., `nebulaserver`) within a container**, where the image is running the given application on `containerPort` (which for us is typically `4040`, as defined in app.js; this port is then "exposed" to the host machine with the `EXPOSE` command in the Dockerfile). This container port is then mapped to the given host port, which can be any unused port you want it to be (e.g, `80`). Your app should now be ready for you to use. You will see in your console printout from within your container print to the terminal window that you launched your container in. Note, however, that your container will be unresponsive to any keyboard input from this terminal window (including the typical `CTRL+C` to stop the Node.js server).
 
 *Note:* I recommend you run a longer command to start your container... See below for details:
 
 **Recommended Command for Mac users**:
 
-`docker run -v $(pwd)/CosmosD3:/www/CosmosD3/ -v $(pwd)/Nebula-Pipeline:/www/Nebula-Pipeline/ -p 80:8081 --name nebula_runner1  nebulaserver`
+`docker run -v $(pwd)/CosmosD3:/www/CosmosD3/ -v $(pwd)/Nebula-Pipeline:/www/Nebula-Pipeline/ -p 4040:4040 --name nebula_runner1  nebulaserver`
 
 **Recommended Command for Windows users**:
 
-`docker run -v $(pwd)\CosmosD3:/www/CosmosD3/ -v $(pwd)\Nebula-Pipeline:/www/Nebula-Pipeline/ -p 80:8081 --name nebula_runner1  nebulaserver`
+`docker run -v $(pwd)\CosmosD3:/www/CosmosD3/ -v $(pwd)\Nebula-Pipeline:/www/Nebula-Pipeline/ -p 4040:4040 --name nebula_runner1  nebulaserver`
 
 
 Lastly, to figure out how to **connect to your app**, you need to know which IP address your Docker container is running on. Docker containers run on the IP address associated with the daemon that it's being run on. To figure out what that IP address is, first try
@@ -86,18 +86,17 @@ Have images or containers you want to get rid of? One of these commands may help
 #### Executing a Command Within a Container
 If you want to execute a command within a container, use `docker exec -it containerID /container/path/to/bash`. This will allow you to execute whatever commands you want from within the container with the specified ID number (which you can obtain using `docker ps`). Type `exit` when you are ready to return to your host machine (just like when using ssh). For our project, the path to bash is simply `/bin/bash`.
 
-
-
 ## Traditional Installation
 Some dependencies must be installed differently for each platform. These instructions focus on getting the NPM server working as well as the pipeline code contained in the Nebula-Pipeline directory since the visualizations themselves (contained in the Nebula-UIs directory) do not need any additional setup beyond this.
 
 The code in Nebula-Pipeline performs all the back end data processing for the visualizations. Each pipeline instantiation executes as a single Python script and is made up of three main pieces: a data controller, a series of models, and a connector. The data controller handles loading and accessing whatever data is to be visualized. The models control how the data is processed and sent to the client, as well as how the client's interactions change these models. Finally, the connector mediates connections to the visualization directly or to a visualization controller such as the Node.js server.
 
+### UPDATES AS OF 11/23/2022
+Instructions for installation in **Ubuntu 20.04** can be found in `LocalInstall.md`. You can run each command in order to install all of the proper dependencies. You also can run the script `LocalInstall.sh` to automate the installation process.
+
 ### Installing Python
 
-For all platforms, **Python 2.7** must be installed for Nebula-Pipeline to work. It can be installed from their website [here](https://www.python.org/downloads/release/python-2712/). This install should come with **pip**, the Python package manager. If you can run pip from the command line, you are ready to proceed. If pip isn't found, you can install it by following the instructions [here](https://pip.pypa.io/en/stable/installing/). Make sure pip is updated to the latest version by running:
-
-``pip install --upgrade pip``
+For all platforms, **Python 3** must be installed for Nebula-Pipeline to work. This install should come with **pip3**, the Python package manager. If you can run pip from the command line, you are ready to proceed.
 
 #### Python Compatibility Issues
 
@@ -109,7 +108,7 @@ Previous resarchers on this project have tried to use [Anaconda](https://www.con
 
 ### Installing Node.js
 
-Install **Node.js** version 8.X [here](https://nodejs.org/dist/latest-v8.x/). Note that this is an older version of Node.js, which is required for ZMQ to work properly (as described [here](https://github.com/JustinTulloss/zeromq.node/issues/525); more details on properly installing ZMQ are [here](https://www.npmjs.com/package/zmq)). Also note that versions at or below 4.4.6 will likely not work correctly either.
+Install **Node.js** version 18.X [here](https://nodejs.org/dist/latest-v18.x/).
 
 ### OS-Specific Instructions
 
@@ -139,13 +138,8 @@ Install **[HomeBrew](http://brew.sh/)**. Then use HomeBrew to install zeromq and
 Install the **npm and nodejs packages**:
 
 ``sudo apt-get install apt-get install -y curl && \
-        curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+        curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
         apt-get install -y nodejs``
-
-If you have issues installing npm/nodejs, you may find some help [here](https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04).
-
-Also install the **libzmq package**:
-``apt-get install -y libzmq-dev``
 
 *Note:* You can largely follow the [Dockerfile](https://github.com/DiscoveryAnalyticsCenter/Nebula/blob/master/Dockerfile) to install this project via command line. Please refer to it if you have any issues during installation.
 
@@ -163,23 +157,23 @@ With this, all the Node dependencies should be installed.
 
 Next, you can install all the **pipeline dependencies** with the command:
 
-``pip install ./path/to/Nebula-Pipeline``
+``pip3 install ./path/to/Nebula-Pipeline``
 
-*Developer Tip:* If you are going to develop, you can use ``pip install -e ./path/to/Nebula-Pipeline``. The `-e` flag will install a link to your development folder instead of copying the files to the `site-packages` directory so may not always need to reinstall when you make changes.
+*Developer Tip:* If you are going to develop, you can use ``pip3 install -e ./path/to/Nebula-Pipeline``. The `-e` flag will install a link to your development folder instead of copying the files to the `site-packages` directory so may not always need to reinstall when you make changes.
 
 Also, install the **NLTK stopwords** to support UIs that use the Elasticsearch Data Controllers:
 
-``python -m nltk.downloader stopwords``
+``python3 -m nltk.downloader stopwords``
 
 Again, you may need to use `sudo`.
 
 **If you are on Linux and want to support Omniview, you must install a custom sklearn package,** which is only compatible with Linux systems:
 
-``pip install -U ./lib/scikit_learn-0.19.dev0-cp27-cp27mu-linux_x86_64.whl``
+``pip3 install -U ./lib/scikit_learn-0.19.dev0-cp27-cp27mu-linux_x86_64.whl``
 
 ### Launch the Node.js server
 
-You can now launch the Node.js server by running `sudo npx nodemon start` from the root directory. This will start the server locally (default listening on port 80, which is the port used for all internet connections). You should now be able to connect to the server via `localhost`.
+You can now launch the Node.js server by running `sudo npm start` from the root directory. This will start the server locally (listens on port 4040, as defined in `app.js`). You should now be able to connect to the server via `localhost`.
 
 *Developer Tip:* If the code in Nebula-Pipeline has changed, you may not see the changes you made unless you rerun the above `pip install` commands.
 
@@ -199,7 +193,7 @@ When each client connects to the server, it can specify which pipeline to load, 
 This is the configuration file for the project. It contains project configuration parameters and the project dependencies that get installed with `npm install`.
 
 ## app.js
-This is the main entry point of the server. It creates a server listening on port 80.
+This is the main entry point of the server. It creates a server listening on port 4040.
 
 ## nebula.js
 The `nebula` Node.js module contains the heart of the logic pertaining to the visualizations and pipelines. The ports to run the pipeline on and the data to be visualized for each pipeline are hard coded within this module. It also handles the core WebSocket logic by listening for incoming WebSocket connections on the web server, handling tracking rooms and clients, and synching messages between them. It is loaded as a module from app.js.
