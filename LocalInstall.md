@@ -41,11 +41,7 @@ sudo update-ca-certificates -f
 ```
 
 ```
-wget https://bootstrap.pypa.io/pip/get-pip.py
-```
-
-```
-sudo python3 get-pip.py
+pip3 install --upgrade pip
 ```
 
 ```
