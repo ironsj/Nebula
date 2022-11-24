@@ -40,12 +40,9 @@ RUN export PYTHONPATH="${PYTHONPATH}:./Nebula-Pipeline"
 
 # Install Nathan Wycoff's version of sklearn
 COPY ./lib/ /opt/lib
-#RUN pip3 install -U /opt/lib/scikit_learn-0.19.dev0-cp27-cp27mu-linux_x86_64.whl
 
 RUN npm install -g npm@9.1.2
-# Install nodemon specifically here so that we can use EXPOSE command
 RUN npm install -g nodemon@^2.0.15
-# Install necessary node packages
 RUN npm install
 
 RUN pip3 install -U scikit-learn
