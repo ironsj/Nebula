@@ -747,6 +747,7 @@ Nebula.prototype.handleMessage = function (room, msg) {
 	if (obj.func) {
 		if (obj.func === "update") {
 			// returns the data to user based on interaction(search/delete node/move slider)
+			console.log(room);
 			this.handleUpdate(room, obj.contents);
 		} else if (obj.func === "get") {
 			//getting data when user clicks a node(document) and send it to the client

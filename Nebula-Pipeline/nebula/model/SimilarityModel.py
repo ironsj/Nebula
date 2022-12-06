@@ -3,6 +3,7 @@ import itertools
 import json
 import os
 import subprocess
+import random
 
 import numpy as np
 from sklearn.manifold import MDS
@@ -154,14 +155,18 @@ class SimilarityModel(pipeline.Model):
     
     def _pairwise_distance(self, positions, weight_list):
         """Calculate a weighted pairwise distance matrix for the high 
-        dimensional or low dimensional positions. For low_d weight_ list
+        dimensional or low dimensional positions. For low_d weight_list
         should be all ones."""
         num_docs = len(positions)
         
         # Compute the pairwise distance of the dimensional points
         pdist = np.zeros((num_docs, num_docs), dtype=np.float64)
-        weight_list = [x[1] for x in weight_list]
-       
+        
+        if (isinstance(weight_list, np.ndarray)):
+            pass
+        else:
+            weight_list = [x[1] for x in weight_list]
+        
         # Calculate the distance between every pair of points
         dist_func = euclidean
         if self.dist_func == "cosine":
@@ -237,7 +242,17 @@ class SimilarityModel(pipeline.Model):
                 self._high_d[doc[DOC_ID]] = doc[DOC_ATTRIBUTES]
                 
             data[DOCUMENTS][i] = doc 
-             
+
+    def stress(self, hd_pdist, ld_pdist):
+        """ Calculate the MDS stress metric between high dimension and low dimensional
+        pairwise distances. Used for inverse MDS.
+        """
+        s = ((hd_pdist - ld_pdist)**2).sum() / (hd_pdist**2).sum()
+        return s
+
+    def new_proposal(self, current, step, direction):
+        return np.clip(current + direction * step * random.random(), 0.00001, 0.9999)
+
     def inverse(self, data):
         interaction = data[INTERACTION]
         if (data[INTERACTION]  == "search" or data[INTERACTION] == "change_relevance" or data[INTERACTION]== "delete"):
@@ -291,7 +306,7 @@ class SimilarityModel(pipeline.Model):
             # Remove the dimensions with no variability
             high_d_matrix = np.array(high_d_matrix)
             num_dimensions = high_d_matrix.shape[1]
-          
+
             keep_indeces = []
             for i in range(num_dimensions): 
                 if high_d_matrix[:,i].var() > 0:
@@ -301,32 +316,99 @@ class SimilarityModel(pipeline.Model):
                 points[keys[i]]["highD"] = high_d_matrix[i][keep_indeces].tolist()
             
             high_dimensions = len(keep_indeces)
+
+            # Get pairwise distances for low_d data
+            #low_d_weights = np.ones(len(attributes),dtype=np.float64)
+            low_d_weights = [(0,1.0),(0,1.0)]
+            #for key in self._weights.keys():
+            #    low_d_weights.append([key,1])
             
-            request = {"points": points, 
-                     "highDimensions": high_dimensions, 
-                     "lowDimensions": self.low_dimensions,
-                     "inverse": True,
-                     "distanceFunc": self.dist_func
-                     }
-               
-            request = json.dumps(request)
-            request = request.encode(encoding='UTF-8')
-            # Start the Java process
-            # THIS IS WHERE INVERSE MDS HAPPENS. If you want to modify the inverse MDS
-            # algorithm, either change this Java code or put a Python version here
-            # instead.
-            proc = subprocess.Popen(['java', '-jar', os.path.join(__location__, 'java/mds.jar')],
-                                    stdin=subprocess.PIPE, 
-                                    stdout=subprocess.PIPE)
+            low_d_points = []
+            for key in keys:
+                low_d_points.append(points[key]["lowD"])
+
+            low_d_dist = self._pairwise_distance(low_d_points,low_d_weights)
             
-            # Submit the json request, read the result, and set the weights
-            output = proc.communicate(request)[0]
-            output = json.loads(output)
+            row, col = high_d_matrix.shape
             
-            weights = np.zeros((num_dimensions))            
-            weights[keep_indeces] = output["weights"]
-           
-            self._weights = {attributes[i]: weights[i] for i in range(num_dimensions)}
+            #if self._weights==None:
+            #    self._weights = np.array([1.0/col]*col)     # Default weights = 1/p
+            #else:
+            #    self._weights = self._weights.to_numpy()
+            #    self._weights = self._weights / self._weights.sum()     # normalize weights to sum to 1
+            new_weights = self._weights.copy()
+
+            # Initialize state
+            flag = [0]*col      # degree of success of a weight change
+            direction = [1]*col     # direction to move a weight, pos or neg
+            step = [1.0/col]*col    # how much to change each weight
+
+            low_d_ids = []
+            for doc in self._docs:
+                if doc[DOC_ID] in keys:
+                    low_d_ids.append(doc)
+            
+            #high_d_w = high_d_matrix * self._weights     # weighted space
+            high_d_matrix, weight_list_tup = self._vectorize(low_d_ids)
+
+            high_d_dist = self._pairwise_distance(high_d_matrix, weight_list_tup)
+
+            #print(len(low_d_dist))
+            #print(len(high_d_dist))
+            current_stress = self.stress(high_d_dist, low_d_dist)
+
+            weight_list = []
+            for tup in weight_list_tup:
+                weight_list.append(tup[1])
+
+            max = 500
+            
+            # Try to minorly adjust each weight to see if it reduces stress
+            for i in range(max):
+                for dim in range(col):
+                    # Get a new weight for the current column
+                    new_w = self.new_proposal(weight_list[dim], step[dim], direction[dim])
+
+                    
+                    # Scale the weight list so it sums to 1
+                    s = 1.0 + new_w - weight_list[dim]
+                    new_weights = np.true_divide(weight_list, s)
+                    new_weights[dim] = new_w / s
+                    
+                    # Apply new weights to high_d data
+                    #np.multiply(high_d_matrix, new_weights, out = high_d_w)
+                    high_d_dist = self._pairwise_distance(high_d_matrix, new_weights)
+
+                    
+                    # Get new stress
+                    new_stress = self.stress(low_d_dist, high_d_dist)
+
+                    # If new stress is lower, then update weights and flag as success
+                    if new_stress < current_stress:
+                        temp = weight_list
+                        weight_list = new_weights
+                        new_weights = temp
+                        current_stress = new_stress
+                        flag[dim] = flag[dim] + 1
+                    else:
+                        flag[dim] = flag[dim] - 1
+                        direction[dim] = -direction[dim]    # Reverse course
+
+                    # If recent success, speed up the step rate
+                    if flag[dim] >= 5:
+                        step[dim] = step[dim] * 2
+                        flag[dim] = 0
+                    elif flag[dim] <= -5:
+                        step[dim] = step[dim] / 2
+                        flag[dim] = 0
+
+            
+            print(keep_indeces)
+            print(weight_list)
+            #weights = np.zeros((num_dimensions))            
+            #weights[keep_indeces] = weight_list
+            weights = weight_list
+            self._weights = {attributes[i]: weight_list[i] for i in range(num_dimensions)}
             pipeline.Model.global_weight_vector = self._weights
                     
             self._new_weights = True         
